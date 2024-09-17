@@ -13,16 +13,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use core::fmt::{Formatter, Debug};
+use core::fmt::{Debug, Formatter};
 
-use curve25519_dalek::constants::{RISTRETTO_BASEPOINT_TABLE, RISTRETTO_BASEPOINT_POINT};
+use curve25519_dalek::constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE};
 use curve25519_dalek::ristretto::RistrettoPoint;
 use curve25519_dalek::scalar::Scalar;
 use curve25519_dalek::traits::MultiscalarMul;
-use rand_core::{RngCore, CryptoRng};
+use rand_core::{CryptoRng, RngCore};
 
 #[cfg(feature = "enable-serde")]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{Ciphertext, DecryptionKey};
 
@@ -79,7 +79,7 @@ impl EncryptionKey {
     /// let encrypted = enc_key.exp_encrypt_with(m, r);
     /// ```
     pub fn exp_encrypt_with(&self, m: Scalar, r: Scalar) -> Ciphertext {
-        let c1 = &r * &RISTRETTO_BASEPOINT_TABLE;
+        let c1 = &r * RISTRETTO_BASEPOINT_TABLE;
         // mG + rY
         let c2 = RistrettoPoint::multiscalar_mul(&[m, r], &[RISTRETTO_BASEPOINT_POINT, self.0]);
         Ciphertext(c1, c2)
@@ -98,7 +98,7 @@ impl EncryptionKey {
     /// let dec_key = DecryptionKey::new(&mut rng);
     /// let enc_key = dec_key.encryption_key();
     ///
-    /// let m = &Scalar::from(5u32) * &GENERATOR_TABLE;
+    /// let m = &Scalar::from(5u32) * GENERATOR_TABLE;
     /// let encrypted = enc_key.encrypt(m, &mut rng);
     /// ```
     pub fn encrypt<R: RngCore + CryptoRng>(&self, m: RistrettoPoint, rng: &mut R) -> Ciphertext {
@@ -118,12 +118,12 @@ impl EncryptionKey {
     /// let dec_key = DecryptionKey::new(&mut rng);
     /// let enc_key = dec_key.encryption_key();
     ///
-    /// let m = &Scalar::from(5u32) * &GENERATOR_TABLE;
+    /// let m = &Scalar::from(5u32) * GENERATOR_TABLE;
     /// let r = Scalar::from(10u32);
     /// let encrypted = enc_key.encrypt_with(m, r);
     /// ```
     pub fn encrypt_with(&self, m: RistrettoPoint, r: Scalar) -> Ciphertext {
-        let c1 = &r * &RISTRETTO_BASEPOINT_TABLE;
+        let c1 = &r * RISTRETTO_BASEPOINT_TABLE;
         let c2 = m + r * &self.0;
         Ciphertext(c1, c2)
     }
@@ -142,7 +142,7 @@ impl EncryptionKey {
     /// let dec_key = DecryptionKey::new(&mut rng);
     /// let enc_key = dec_key.encryption_key();
     ///
-    /// let m = &Scalar::from(5u32) * &GENERATOR_TABLE;
+    /// let m = &Scalar::from(5u32) * GENERATOR_TABLE;
     /// let ct1 = enc_key.encrypt(m, &mut rng);
     /// let ct2 = enc_key.rerandomise(ct1, &mut rng);
     /// assert_eq!(dec_key.decrypt(ct1), dec_key.decrypt(ct2));
@@ -151,7 +151,6 @@ impl EncryptionKey {
     pub fn rerandomise<R: RngCore + CryptoRng>(&self, ct: Ciphertext, rng: &mut R) -> Ciphertext {
         self.rerandomise_with(ct, Scalar::random(rng))
     }
-
 
     /// Re-randomise the ciphertext `ct` with the provided blinding factor.
     /// This will generate a new encryption of the same curve point.
@@ -167,7 +166,7 @@ impl EncryptionKey {
     /// let dec_key = DecryptionKey::new(&mut rng);
     /// let enc_key = dec_key.encryption_key();
     ///
-    /// let m = &Scalar::from(5u32) * &GENERATOR_TABLE;
+    /// let m = &Scalar::from(5u32) * GENERATOR_TABLE;
     /// let ct1 = enc_key.encrypt(m, &mut rng);
     ///
     /// let r = Scalar::from(10u32);
@@ -177,7 +176,7 @@ impl EncryptionKey {
     /// ```
     #[must_use = "the Ciphertext input is not mutated, the function returns the new rerandomised Ciphertext"]
     pub fn rerandomise_with(&self, ct: Ciphertext, r: Scalar) -> Ciphertext {
-        let c1 = ct.0 + &r * &RISTRETTO_BASEPOINT_TABLE;
+        let c1 = ct.0 + &r * RISTRETTO_BASEPOINT_TABLE;
         let c2 = ct.1 + &self.0 * r;
         Ciphertext(c1, c2)
     }

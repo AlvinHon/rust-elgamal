@@ -13,20 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![no_std]
-#![cfg_attr(feature = "nightly", feature(external_doc))]
-#![cfg_attr(feature = "nightly", doc(include = "../README.md"))]
-
 mod ciphertext;
 mod decrypt;
 mod encrypt;
 
-use curve25519_dalek::constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE, RISTRETTO_BASEPOINT_COMPRESSED};
+use curve25519_dalek::constants::{
+    RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE,
+};
 use curve25519_dalek::ristretto::RistrettoBasepointTable;
 
-pub use curve25519_dalek::scalar::Scalar;
-pub use curve25519_dalek::ristretto::RistrettoPoint;
 pub use curve25519_dalek::ristretto::CompressedRistretto;
+pub use curve25519_dalek::ristretto::RistrettoPoint;
+pub use curve25519_dalek::scalar::Scalar;
 
 pub use curve25519_dalek::traits::Identity;
 pub use curve25519_dalek::traits::IsIdentity;
@@ -48,7 +46,7 @@ pub const GENERATOR_POINT_COMPRESSED: CompressedRistretto = RISTRETTO_BASEPOINT_
 
 /// The group generator as a table of precomputed multiples. This is the most efficient way to
 /// produce a scalar multiple of the generator.
-pub const GENERATOR_TABLE: RistrettoBasepointTable = RISTRETTO_BASEPOINT_TABLE;
+pub static GENERATOR_TABLE: &RistrettoBasepointTable = RISTRETTO_BASEPOINT_TABLE;
 
 #[cfg(test)]
 mod tests {

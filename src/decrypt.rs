@@ -21,7 +21,7 @@ use curve25519_dalek::scalar::Scalar;
 use rand_core::{CryptoRng, RngCore};
 
 #[cfg(feature = "enable-serde")]
-use serde::{Deserialize, Deserializer, Serialize, de::Visitor};
+use serde::{de::Visitor, Deserialize, Deserializer, Serialize};
 
 use crate::{Ciphertext, EncryptionKey};
 
@@ -50,7 +50,7 @@ impl DecryptionKey {
     /// ```
     pub fn new<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
         let secret = Scalar::random(rng);
-        let ek = EncryptionKey(&secret * &RISTRETTO_BASEPOINT_TABLE);
+        let ek = EncryptionKey(&secret * RISTRETTO_BASEPOINT_TABLE);
         Self { secret, ek }
     }
 
@@ -66,7 +66,7 @@ impl DecryptionKey {
     /// let mut rng = StdRng::from_entropy();
     /// let dec_key = DecryptionKey::new(&mut rng);
     ///
-    /// let m = &Scalar::from(5u32) * &GENERATOR_TABLE;
+    /// let m = &Scalar::from(5u32) * GENERATOR_TABLE;
     /// let ct = dec_key.encryption_key().encrypt(m, &mut rng);
     /// let decrypted = dec_key.decrypt(ct);
     /// assert_eq!(m, decrypted);
@@ -91,7 +91,7 @@ impl Debug for DecryptionKey {
 
 impl From<Scalar> for DecryptionKey {
     fn from(secret: Scalar) -> Self {
-        let ek = EncryptionKey(&secret * &RISTRETTO_BASEPOINT_TABLE);
+        let ek = EncryptionKey(&secret * RISTRETTO_BASEPOINT_TABLE);
         Self { secret, ek }
     }
 }
@@ -108,7 +108,8 @@ impl AsRef<Scalar> for DecryptionKey {
 #[cfg(feature = "enable-serde")]
 impl<'de> Deserialize<'de> for DecryptionKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         struct DecryptionKeyVisitor;
 
@@ -120,11 +121,14 @@ impl<'de> Deserialize<'de> for DecryptionKey {
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<DecryptionKey, A::Error>
-                where A: serde::de::SeqAccess<'de>
+            where
+                A: serde::de::SeqAccess<'de>,
             {
-                let secret = seq.next_element()?
-                    .ok_or(serde::de::Error::invalid_length(0, &"expected decryption key (32 bytes)"))?;
-                let ek = EncryptionKey(&secret * &RISTRETTO_BASEPOINT_TABLE);
+                let secret = seq.next_element()?.ok_or(serde::de::Error::invalid_length(
+                    0,
+                    &"expected decryption key (32 bytes)",
+                ))?;
+                let ek = EncryptionKey(&secret * RISTRETTO_BASEPOINT_TABLE);
                 Ok(DecryptionKey { secret, ek })
             }
         }
