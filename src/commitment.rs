@@ -33,7 +33,7 @@ pub type CommitMessage = Scalar;
 
 impl Commitment {
     /// Get the encryption key from the commitment.
-    pub fn encrption_key(&self) -> EncryptionKey {
+    pub fn encryption_key(&self) -> EncryptionKey {
         EncryptionKey(self.0)
     }
 
@@ -114,7 +114,7 @@ impl Commitment {
         let Commitment(_, ct) = self;
         let Open(r, m) = open;
 
-        let ct2 = self.encrption_key().encrypt_with(m * GENERATOR_TABLE, *r);
+        let ct2 = self.encryption_key().encrypt_with(m * GENERATOR_TABLE, *r);
 
         ct == &ct2
     }
