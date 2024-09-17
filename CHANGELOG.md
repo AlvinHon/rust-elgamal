@@ -1,3 +1,8 @@
+### 0.5.0 (2024-09-17)
+* change the forked `curve25519-dalek` dependency back to the original repo.
+* remove features `std`, `simd_backend` and `nightly`. Please check `curve25519-dalek` [README.md](https://github.com/dalek-cryptography/curve25519-dalek/tree/main/curve25519-dalek#simd-backend) for adding SIMD support.
+* enable feature `zeroize` in `curve25519-dalek` dependency.
+
 ### 0.4.0 (2021-01-29)
 * replace `curve25519-dalek` dependency with a fork
 * bump `curve25519-dalek` to version 4, removing the need for the `util` module (as `curve25519-dalek` now uses `rand-core` 0.6)

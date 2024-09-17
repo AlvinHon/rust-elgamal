@@ -29,20 +29,11 @@ let mut rng = StdRng::from_entropy();
 let dec_key = DecryptionKey::new(&mut rng);
 let enc_key = dec_key.encryption_key();
 
-let message = &Scalar::from(5u32) * &GENERATOR_TABLE;
+let message = &Scalar::from(5u32) * GENERATOR_TABLE;
 let encrypted = enc_key.encrypt(message, &mut rng);
 let decrypted = dec_key.decrypt(encrypted);
 assert_eq!(message, decrypted);
 ```
 
 ## Features
-* `std` (enabled by default): include the Rust standard library. Disable this feature for embedded environments.
 * `enable-serde`: Turn on [serde](https://docs.rs/serde/) support.
-* `simd_backend`: This crate uses [curve25519-dalek](https://docs.rs/curve25519-dalek/3.0.2/curve25519_dalek/) to implement elliptic curve group operations. With nightly Rust, curve25519-dalek supports SIMD (single-instruction, multiple-data) instructions for extra efficiency. Enable this feature with a nightly version of Rust to use SIMD operations (either `avx2` or `ifma`). For example: 
-```bash
-# Requires nightly, RUSTFLAGS="-C target_feature=+avx2" to use avx2
-cargo build --features "simd_backend"
-# Requires nightly, RUSTFLAGS="-C target_feature=+avx512ifma" to use ifma
-cargo build --features "simd_backend"
-```
-* `nightly`: used for building documentation and for SIMD support.
