@@ -21,6 +21,9 @@ use std::{
 use curve25519_dalek::{RistrettoPoint, Scalar};
 use rand_core::{CryptoRng, RngCore};
 
+#[cfg(feature = "enable-serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::{Ciphertext, DecryptionKey, EncryptionKey, Open, GENERATOR_TABLE};
 
 /// Elgamal Commitment Scheme uses exactly the same as encrption logic where the bindling factor
@@ -238,5 +241,29 @@ impl Mul<&Scalar> for &Commitment {
 
     fn mul(self, rhs: &Scalar) -> Self::Output {
         Commitment(self.0, self.1 * rhs)
+    }
+}
+
+#[cfg(feature = "enable-serde")]
+#[cfg(test)]
+mod tests {
+    use rand::{rngs::StdRng, SeedableRng};
+
+    use crate::{Commitment, Scalar};
+
+    // Test that serialising and deserialising a commitment.
+    #[test]
+    fn serde_commitment() {
+        const N: usize = 100;
+
+        let mut rng = StdRng::from_entropy();
+
+        for _ in 0..N {
+            let m = Scalar::random(&mut rng);
+            let (_, commitment) = Commitment::commit(m, &mut rng);
+            let encoded = bincode::serialize(&commitment).unwrap();
+            let decoded = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(commitment, decoded);
+        }
     }
 }

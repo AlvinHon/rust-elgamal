@@ -19,6 +19,9 @@ use std::{
     ops::{Add, Mul, Neg, Sub},
 };
 
+#[cfg(feature = "enable-serde")]
+use serde::{Deserialize, Serialize};
+
 /// Open is the pair of the blinding factor and the message used in the commitment.
 #[derive(Copy, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "enable-serde", derive(Serialize, Deserialize))]
@@ -139,5 +142,29 @@ impl Mul<&Scalar> for &Open {
 
     fn mul(self, rhs: &Scalar) -> Self::Output {
         Open(self.0 * rhs, self.1 * rhs)
+    }
+}
+
+#[cfg(feature = "enable-serde")]
+#[cfg(test)]
+mod tests {
+    use rand::{rngs::StdRng, SeedableRng};
+
+    use crate::{Commitment, Scalar};
+
+    // Test that serialising and deserialising an open.
+    #[test]
+    fn serde_open() {
+        const N: usize = 100;
+
+        let mut rng = StdRng::from_entropy();
+
+        for _ in 0..N {
+            let m = Scalar::random(&mut rng);
+            let (open, _) = Commitment::commit(m, &mut rng);
+            let encoded = bincode::serialize(&open).unwrap();
+            let decoded = bincode::deserialize(&encoded).unwrap();
+            assert_eq!(open, decoded);
+        }
     }
 }

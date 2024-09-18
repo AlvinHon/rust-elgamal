@@ -1,6 +1,6 @@
 [package]
 name = "rust-elgamal"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Eleanor McMurtry <elem0@protonmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
