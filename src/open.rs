@@ -163,6 +163,9 @@ mod tests {
             let m = Scalar::random(&mut rng);
             let (open, _) = Commitment::commit(m, &mut rng);
             let encoded = bincode::serialize(&open).unwrap();
+
+            assert_eq!(encoded.len(), 64); // 32 bytes for each Scalar
+
             let decoded = bincode::deserialize(&encoded).unwrap();
             assert_eq!(open, decoded);
         }

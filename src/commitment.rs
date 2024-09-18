@@ -262,6 +262,9 @@ mod tests {
             let m = Scalar::random(&mut rng);
             let (_, commitment) = Commitment::commit(m, &mut rng);
             let encoded = bincode::serialize(&commitment).unwrap();
+
+            assert_eq!(encoded.len(), 96); // 32 bytes for RistrettoPoint and 64 bytes for Ciphertext
+
             let decoded = bincode::deserialize(&encoded).unwrap();
             assert_eq!(commitment, decoded);
         }
