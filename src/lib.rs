@@ -14,8 +14,10 @@
 // limitations under the License.
 
 mod ciphertext;
+mod commitment;
 mod decrypt;
 mod encrypt;
+mod open;
 
 use curve25519_dalek::constants::{
     RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE,
@@ -31,8 +33,10 @@ pub use curve25519_dalek::traits::IsIdentity;
 pub use curve25519_dalek::traits::MultiscalarMul;
 
 pub use ciphertext::Ciphertext;
+pub use commitment::Commitment;
 pub use decrypt::DecryptionKey;
 pub use encrypt::EncryptionKey;
+pub use open::Open;
 
 /// The group generator as a single point.
 /// If you're trying to create a scalar multiple of the generator, you probably want
@@ -50,10 +54,11 @@ pub static GENERATOR_TABLE: &RistrettoBasepointTable = RISTRETTO_BASEPOINT_TABLE
 
 #[cfg(test)]
 mod tests {
+    use curve25519_dalek::Scalar;
     use rand::prelude::StdRng;
     use rand_core::SeedableRng;
 
-    use crate::{DecryptionKey, RistrettoPoint};
+    use crate::{Commitment, DecryptionKey, RistrettoPoint};
 
     // Test that encrypting a point and decrypting the result does not change a point.
     #[test]
@@ -109,5 +114,27 @@ mod tests {
             let decrypted = dk.decrypt(ct_sum);
             assert_eq!(sum, decrypted);
         }
+    }
+
+    // Test that commitment produced by same encrption key preserves the homomorphism property.
+    #[test]
+    fn homomorphism_commitment() {
+        let mut rng = StdRng::from_entropy();
+        let decrypt_key = DecryptionKey::new(&mut rng);
+        let y = decrypt_key.encryption_key();
+
+        let m = Scalar::random(&mut rng);
+        let r = Scalar::random(&mut rng);
+        let (open, commitment) = Commitment::commit_with(m, r, y);
+        assert!(commitment.verify(&open));
+
+        let m2 = Scalar::random(&mut rng);
+        let r2 = Scalar::random(&mut rng);
+        let (open2, commitment2) = Commitment::commit_with(m2, r2, y);
+        assert!(commitment2.verify(&open2));
+
+        let sum_commitment = commitment + commitment2;
+        let sum_open = open + open2;
+        assert!(sum_commitment.verify(&sum_open));
     }
 }
