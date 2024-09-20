@@ -95,6 +95,59 @@ impl Commitment {
         (open, commitment)
     }
 
+    /// Rerandomise the commitment and open.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rand::{rngs::StdRng, SeedableRng};
+    /// use rust_elgamal::{DecryptionKey, Commitment, Scalar};
+    ///
+    /// let mut rng = StdRng::from_entropy();
+    ///
+    /// let decrypt_key = DecryptionKey::new(&mut rng);
+    /// let y = decrypt_key.encryption_key();
+    /// let m = Scalar::from(7u32);
+    /// let r = Scalar::from(8u32);
+    /// let (open, mut commitment) = Commitment::commit_with(m, r, y);
+    ///
+    /// let new_open = commitment.rerandomise(open, &mut rng);
+    /// assert!(commitment.verify(&new_open));
+    /// ```
+    #[must_use = "the Open input is not mutated, the function returns the new rerandomised Commitment and Open"]
+    pub fn rerandomise<R: RngCore + CryptoRng>(&mut self, open: Open, rng: &mut R) -> Open {
+        self.rerandomise_with(open, Scalar::random(rng), Scalar::random(rng))
+    }
+
+    /// Rerandomise the commitment and open with a new pair of randomness.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rand::{rngs::StdRng, SeedableRng};
+    /// use rust_elgamal::{DecryptionKey, Commitment, Scalar};
+    ///
+    /// let mut rng = StdRng::from_entropy();
+    ///
+    /// let decrypt_key = DecryptionKey::new(&mut rng);
+    /// let y = decrypt_key.encryption_key();
+    /// let m = Scalar::from(7u32);
+    /// let r = Scalar::from(8u32);
+    /// let (open, mut commitment) = Commitment::commit_with(m, r, y);
+    ///
+    /// let new_r1 = Scalar::from(9u32);
+    /// let new_r2 = Scalar::from(10u32);
+    /// let new_open = commitment.rerandomise_with(open, new_r1, new_r2);
+    /// assert!(commitment.verify(&new_open));
+    /// ```
+    #[must_use = "the Open input is not mutated, the function returns the new rerandomised Commitment and Open"]
+    pub fn rerandomise_with(&mut self, open: Open, r1: Scalar, r2: Scalar) -> Open {
+        let Commitment(y, Ciphertext(r_g, m_g_r_y)) = self;
+        *r_g += &r1 * GENERATOR_TABLE;
+        *m_g_r_y += *y * r1 + &r2 * GENERATOR_TABLE;
+        Open(open.0 + r1, open.1 + r2)
+    }
+
     /// Verify the commitment.
     ///
     /// # Example
