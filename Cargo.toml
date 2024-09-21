@@ -23,3 +23,8 @@ serde = { version = "1", features = ["derive"], optional = true }
 [dev-dependencies]
 bincode = "1"
 rand = { version = "0.8" }
+criterion = "0.5.1"
+
+[[bench]]
+name = "bench"
+harness = false
